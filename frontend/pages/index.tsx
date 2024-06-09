@@ -1,26 +1,42 @@
-// pages/index.tsx
 import { useState } from 'react';
-import axios from 'axios';
 import QuestionInput from '../components/QuestionInput';
 import ResultDisplay from '../components/ResultDisplay';
+import LoadingSpinner from '../components/LoadingSpinner';
+import ErrorMessage from '../components/ErrorMessage';
+import {generateCodeAndExplanation} from './api/generate';
 
 const IndexPage = () => {
   const [result, setResult] = useState({ code: '', explanation: '' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleQuestionSubmit = async (question: string) => {
+    setLoading(true);
+    setError('');
+    setResult({ code: '', explanation: '' });
     try {
-      const response = await axios.post('/api/generate', { question });
-      setResult(response.data);
-    } catch (error) {
-      console.error(error);
+      const response = await generateCodeAndExplanation(question)
+      setResult(response);
+    } catch (error: any) {
+      if (error.response && error.response.status === 400) {
+        setError('Invalid Input. Please check your question.');
+      } else {
+        setError('An error occurred while fetching data from the backend.');
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="container py-8">
-      <h1 className="text-3xl font-bold mb-6 text-center">Blink Labs Coding Assistant</h1>
-      <QuestionInput onSubmit={handleQuestionSubmit} />
-      {result.code && <ResultDisplay code={result.code} explanation={result.explanation} />}
+    <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-start py-8 px-4">
+      <h1 className="text-4xl font-bold mb-12 text-center text-white">JS Helper App</h1>
+      <div className="w-full max-w-xl mt-4">
+        <QuestionInput onSubmit={handleQuestionSubmit} />
+        {loading && <LoadingSpinner />}
+        {error && <ErrorMessage message={error} />}
+        {result.code && <ResultDisplay code={result.code} explanation={result.explanation} />}
+      </div>
     </div>
   );
 };

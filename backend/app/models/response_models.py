@@ -1,4 +1,3 @@
-# app/models/response_models.py
 from pydantic import BaseModel
 
 class CodeResponse(BaseModel):
